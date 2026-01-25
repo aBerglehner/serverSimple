@@ -22,31 +22,45 @@ func main() {
 	defer listener.Close()
 	fmt.Printf("listening on: %v\n", listener.Addr())
 
+	curPlayer := 0
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("failed to accept connection, err:", err)
 			continue
 		}
-		go handleConn(conn)
+		curPlayer++
+		go handleConn(conn, curPlayer)
 	}
 }
 
-func handleConn(conn net.Conn) {
-	defer conn.Close()
+func handleConn(conn net.Conn, player int) {
+	defer func() {
+		conn.Close()
+		// todo if 1 player leaves the other wins
+	}()
+	fmt.Printf("Player: %v joined\n", player)
+
+	// Send greeting immediately
+	welcomeMsg := fmt.Sprintf("Welcome to the echo server player: %v\n", player)
+	_, err := conn.Write([]byte(welcomeMsg))
+	if err != nil {
+		fmt.Println("failed to write welcome message:", err)
+		return
+	}
 
 	reader := bufio.NewReader(conn)
 	for {
-		bytes, err := reader.ReadBytes(byte('\n'))
+		requestMsg, err := reader.ReadBytes(byte('\n'))
 		if err != nil {
 			if err != io.EOF {
 				fmt.Println("failed to read data, err:", err)
 			}
 			return
 		}
-		fmt.Printf("request: %s\n", bytes)
+		fmt.Printf("request: %s\n", requestMsg)
 
-		line := fmt.Sprintf("Echo: %s", bytes)
+		line := fmt.Sprintf("Echo: %s", requestMsg)
 		// fmt.Printf("response: %v\n", line)
 
 		_, err = conn.Write([]byte(line))
