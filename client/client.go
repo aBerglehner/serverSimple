@@ -27,9 +27,17 @@ func main() {
 	serverReader := bufio.NewReader(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 
-	readServerInitMsg(serverReader)
+	// readServerInitMsg(serverReader)
 
 	for {
+		response, err := serverReader.ReadString('\n')
+		if err != nil {
+			fmt.Println("failed to read from server:", err)
+			return
+		}
+
+		fmt.Print("server: ", response)
+
 		fmt.Print("> ")
 		line, err := stdinReader.ReadString('\n')
 		if err != nil {
@@ -43,13 +51,6 @@ func main() {
 			return
 		}
 
-		response, err := serverReader.ReadString('\n')
-		if err != nil {
-			fmt.Println("failed to read from server:", err)
-			return
-		}
-
-		fmt.Print("server: ", response)
 	}
 }
 

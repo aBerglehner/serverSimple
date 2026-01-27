@@ -22,6 +22,7 @@ func main() {
 	defer listener.Close()
 	fmt.Printf("listening on: %v\n", listener.Addr())
 
+	ch := make(chan string)
 	curPlayer := 0
 	for {
 		conn, err := listener.Accept()
@@ -30,24 +31,48 @@ func main() {
 			continue
 		}
 		curPlayer++
-		go handleConn(conn, curPlayer)
+		if curPlayer == 1 {
+			fmt.Printf("Player: %v joined\n", curPlayer)
+			go connPlayer1(conn, ch)
+		}
+		if curPlayer == 2 {
+			fmt.Printf("Player: %v joined\n", curPlayer)
+			// TODO:
+			go connPlayer2(conn, ch)
+		}
+		if curPlayer > 2 {
+			// todo
+			fmt.Println("!!! todo !!!")
+		}
 	}
 }
 
-func handleConn(conn net.Conn, player int) {
-	defer func() {
-		conn.Close()
-		// todo if 1 player leaves the other wins
-	}()
-	fmt.Printf("Player: %v joined\n", player)
+func connPlayer2(conn net.Conn, ch chan string) {
+	defer conn.Close()
+	ch <- "halli galli"
+	for {
+		// todo
+	}
+}
 
-	// Send greeting immediately
-	welcomeMsg := fmt.Sprintf("Welcome to the echo server player: %v\n", player)
+func connPlayer1(conn net.Conn, ch chan string) {
+	defer conn.Close()
+
+	// greeting msg
+	welcomeMsg := fmt.Sprintln("Waiting for another player!")
 	_, err := conn.Write([]byte(welcomeMsg))
 	if err != nil {
 		fmt.Println("failed to write welcome message:", err)
 		return
 	}
+	// todo if player 2 swap turn and set it to player 1
+	// todo turn
+	select {
+	case msg := <-ch:
+		fmt.Println("player 2 joined: ", msg)
+	}
+
+	// todo if player 2 start
 
 	reader := bufio.NewReader(conn)
 	for {
