@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -27,17 +28,16 @@ func main() {
 	serverReader := bufio.NewReader(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 
-	// readServerInitMsg(serverReader)
+	for {
+		msg := readServerInitMsg(serverReader)
+		fmt.Printf("msg: %v\n", msg)
+		// or case for player 2
+		if strings.Contains(msg, "start") {
+			break
+		}
+	}
 
 	for {
-		response, err := serverReader.ReadString('\n')
-		if err != nil {
-			fmt.Println("failed to read from server:", err)
-			return
-		}
-
-		fmt.Print("server: ", response)
-
 		fmt.Print("> ")
 		line, err := stdinReader.ReadString('\n')
 		if err != nil {
@@ -51,14 +51,23 @@ func main() {
 			return
 		}
 
+		response, err := serverReader.ReadString('\n')
+		if err != nil {
+			fmt.Println("failed to read from server:", err)
+			return
+		}
+
+		fmt.Print("server: ", response)
+
 	}
 }
 
-func readServerInitMsg(serverReader *bufio.Reader) {
+func readServerInitMsg(serverReader *bufio.Reader) string {
 	welcome, err := serverReader.ReadString('\n')
 	if err != nil {
 		fmt.Println("failed to read welcome:", err)
-		return
+		return ""
 	}
 	fmt.Print("server: ", welcome)
+	return welcome
 }

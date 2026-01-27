@@ -65,11 +65,17 @@ func connPlayer1(conn net.Conn, ch chan string) {
 		fmt.Println("failed to write welcome message:", err)
 		return
 	}
-	// todo if player 2 swap turn and set it to player 1
-	// todo turn
 	select {
 	case msg := <-ch:
-		fmt.Println("player 2 joined: ", msg)
+		fmt.Println("msg", msg)
+	}
+
+	// greeting msg
+	tt := fmt.Sprintln("start")
+	_, err = conn.Write([]byte(tt))
+	if err != nil {
+		fmt.Println("failed to write welcome message:", err)
+		return
 	}
 
 	// todo if player 2 start
