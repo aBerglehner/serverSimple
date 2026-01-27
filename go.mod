@@ -1,3 +1,3 @@
-module github.com/alex/echoServer
+module github.com/alex/serverSimple
 
 go 1.25.5
