@@ -46,7 +46,7 @@ func main() {
 		size, _ := strconv.Atoi(strings.TrimSpace(lenLine))
 		buf := make([]byte, size)
 		io.ReadFull(serverReader, buf)
-		fmt.Printf("buf: %s\n", buf)
+		fmt.Printf("%s\n", buf)
 
 		fmt.Print("> ")
 		line, err := stdinReader.ReadString('\n')
