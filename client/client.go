@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +16,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	address := fmt.Sprintf("%s:%s", os.Args[1], os.Args[2])
+	address := fmt.Sprintf("%v:%v", os.Args[1], os.Args[2])
 
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
@@ -28,16 +30,24 @@ func main() {
 	serverReader := bufio.NewReader(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 
-	for {
-		msg := readServerInitMsg(serverReader)
-		fmt.Printf("msg: %v\n", msg)
-		// or case for player 2
-		if strings.Contains(msg, "start") {
-			break
-		}
-	}
+	readServerInitMsg(serverReader)
 
 	for {
+
+		// data,err:=serverReader.ReadBytes('\n')
+
+		lenLine, err := serverReader.ReadString('\n')
+		if err != nil {
+			fmt.Println("failed to read from server:", err)
+			return
+		}
+		fmt.Print("lenLine: ", lenLine)
+
+		size, _ := strconv.Atoi(strings.TrimSpace(lenLine))
+		buf := make([]byte, size)
+		io.ReadFull(serverReader, buf)
+		fmt.Printf("buf: %s\n", buf)
+
 		fmt.Print("> ")
 		line, err := stdinReader.ReadString('\n')
 		if err != nil {
@@ -50,15 +60,6 @@ func main() {
 			fmt.Println("failed to write to server:", err)
 			return
 		}
-
-		response, err := serverReader.ReadString('\n')
-		if err != nil {
-			fmt.Println("failed to read from server:", err)
-			return
-		}
-
-		fmt.Print("server: ", response)
-
 	}
 }
 

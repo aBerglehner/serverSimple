@@ -6,6 +6,9 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
+
+	"github.com/alex/serverSimple/server/board"
 )
 
 func main() {
@@ -22,7 +25,8 @@ func main() {
 	defer listener.Close()
 	fmt.Printf("listening on: %v\n", listener.Addr())
 
-	ch := make(chan string)
+	startCh := make(chan string)
+	board := board.NewBoard()
 	curPlayer := 0
 	for {
 		conn, err := listener.Accept()
@@ -33,12 +37,12 @@ func main() {
 		curPlayer++
 		if curPlayer == 1 {
 			fmt.Printf("Player: %v joined\n", curPlayer)
-			go connPlayer1(conn, ch)
+			go connPlayer1(conn, startCh, board)
 		}
 		if curPlayer == 2 {
 			fmt.Printf("Player: %v joined\n", curPlayer)
 			// TODO:
-			go connPlayer2(conn, ch)
+			go connPlayer2(conn, startCh, board)
 		}
 		if curPlayer > 2 {
 			// todo
@@ -47,15 +51,17 @@ func main() {
 	}
 }
 
-func connPlayer2(conn net.Conn, ch chan string) {
+func connPlayer2(conn net.Conn, startCh chan<- string, board board.Board) {
 	defer conn.Close()
-	ch <- "halli galli"
+
+	startCh <- "start"
 	for {
 		// todo
+		time.Sleep(1 * time.Second)
 	}
 }
 
-func connPlayer1(conn net.Conn, ch chan string) {
+func connPlayer1(conn net.Conn, startCh <-chan string, board board.Board) {
 	defer conn.Close()
 
 	// greeting msg
@@ -65,14 +71,15 @@ func connPlayer1(conn net.Conn, ch chan string) {
 		fmt.Println("failed to write welcome message:", err)
 		return
 	}
-	select {
-	case msg := <-ch:
-		fmt.Println("msg", msg)
-	}
 
-	// greeting msg
-	tt := fmt.Sprintln("start")
-	_, err = conn.Write([]byte(tt))
+	// waiting for 2 player
+	<-startCh
+	fmt.Println("after start")
+
+	// start board
+	payload := board.String()
+	payload = fmt.Sprintf("%d\n%s", len(payload), payload)
+	_, err = conn.Write([]byte(payload))
 	if err != nil {
 		fmt.Println("failed to write welcome message:", err)
 		return
