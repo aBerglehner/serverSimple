@@ -30,11 +30,10 @@ func main() {
 	serverReader := bufio.NewReader(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 
-	readServerInitMsg(serverReader)
-
+	// get board -> make move -> get board -> make move
 	for {
-
-		// data,err:=serverReader.ReadBytes('\n')
+		// data, _ := serverReader.ReadBytes('\n')
+		// fmt.Printf("server: %s\n", data)
 
 		lenLine, err := serverReader.ReadString('\n')
 		if err != nil {
@@ -61,14 +60,4 @@ func main() {
 			return
 		}
 	}
-}
-
-func readServerInitMsg(serverReader *bufio.Reader) string {
-	welcome, err := serverReader.ReadString('\n')
-	if err != nil {
-		fmt.Println("failed to read welcome:", err)
-		return ""
-	}
-	fmt.Print("server: ", welcome)
-	return welcome
 }
