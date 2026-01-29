@@ -30,11 +30,8 @@ func main() {
 	serverReader := bufio.NewReader(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 
-	// get board -> make move -> get board -> make move
 	for {
-		// data, _ := serverReader.ReadBytes('\n')
-		// fmt.Printf("server: %s\n", data)
-
+		// get board
 		lenLine, err := serverReader.ReadString('\n')
 		if err != nil {
 			fmt.Println("failed to read from server:", err)
@@ -47,6 +44,7 @@ func main() {
 		io.ReadFull(serverReader, buf)
 		fmt.Printf("%s\n", buf)
 
+		// make move
 		fmt.Print("> ")
 		line, err := stdinReader.ReadString('\n')
 		if err != nil {
