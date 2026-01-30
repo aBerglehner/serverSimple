@@ -26,6 +26,7 @@ func main() {
 
 	player2Turn := make(chan struct{})
 	player1Turn := make(chan struct{})
+
 	board := board.NewBoard()
 	curPlayer := 0
 	for {
@@ -50,7 +51,7 @@ func main() {
 	}
 }
 
-func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan struct{}, board board.Board) {
+func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan struct{}, myBoard *board.Board) {
 	defer conn.Close()
 	ownTurn <- struct{}{}
 
@@ -60,7 +61,7 @@ func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan stru
 		<-player1Turn
 		// fmt.Println("after player 1 turn")
 
-		payload := board.String()
+		payload := myBoard.String()
 		payload = fmt.Sprintf("%d\n%s", len(payload), payload)
 		_, err := conn.Write([]byte(payload))
 		if err != nil {
@@ -77,11 +78,12 @@ func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan stru
 		}
 		fmt.Printf("request player 2: %s\n", requestMsg)
 
+		myBoard.Update(board.O, string(requestMsg))
 		ownTurn <- struct{}{}
 	}
 }
 
-func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan struct{}, board board.Board) {
+func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan struct{}, myBoard *board.Board) {
 	defer conn.Close()
 
 	reader := bufio.NewReader(conn)
@@ -91,7 +93,7 @@ func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan stru
 		<-player2Turn
 		// fmt.Println("after player 2 turn")
 
-		payload := board.String()
+		payload := myBoard.String()
 		payload = fmt.Sprintf("%d\n%s", len(payload), payload)
 		_, err := conn.Write([]byte(payload))
 		if err != nil {
@@ -108,6 +110,7 @@ func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan stru
 		}
 		fmt.Printf("request player 1: %s\n", requestMsg)
 
+		myBoard.Update(board.X, string(requestMsg))
 		ownTurn <- struct{}{}
 	}
 }

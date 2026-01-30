@@ -2,6 +2,7 @@ package board
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -15,12 +16,30 @@ const (
 
 type Board [3][3]Cell
 
-func NewBoard() Board {
-	return Board{
+func NewBoard() *Board {
+	return &Board{
 		{' ', ' ', ' '},
 		{' ', ' ', ' '},
 		{' ', ' ', ' '},
 	}
+}
+
+func (b *Board) Update(cellType Cell, move string) {
+	// A=0,B=1,C=3
+	c := strings.ToUpper(move[0:1])
+	var col int
+	switch c {
+	case "A":
+		col = 0
+	case "B":
+		col = 1
+	case "C":
+		col = 2
+	}
+
+	row, _ := strconv.Atoi(strings.TrimSpace(move[1:]))
+
+	b[row-1][col] = cellType
 }
 
 func (b Board) String() string {
