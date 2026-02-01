@@ -41,7 +41,6 @@ func (b *Board) Update(cellType Cell, move string) {
 	b[row-1][col] = cellType
 }
 
-// TODO: add win func
 func (b Board) String() string {
 	var sb strings.Builder
 	sb.WriteString("  A   B   C\n")
@@ -53,4 +52,56 @@ func (b Board) String() string {
 		}
 	}
 	return sb.String()
+}
+
+func (b *Board) Won() bool {
+	// check rows
+	for _, row := range b {
+		cur := row[0]
+		rowWin := true
+		for _, col := range row {
+			if cur != col {
+				rowWin = false
+			}
+		}
+		if rowWin && cur != Empty {
+			return true
+		}
+	}
+
+	// check vertical cells
+	// first vertical col
+	if b[0][0] == b[1][0] && b[0][0] == b[2][0] {
+		if b[0][0] != Empty {
+			return true
+		}
+	}
+	// second vertical col
+	if b[0][1] == b[1][1] && b[0][1] == b[2][1] {
+		if b[0][1] != Empty {
+			return true
+		}
+	}
+	// third vertical col
+	if b[0][2] == b[1][2] && b[0][2] == b[2][2] {
+		if b[0][2] != Empty {
+			return true
+		}
+	}
+
+	// cross check
+	// 0,0; 1,1; 2,2
+	if b[0][0] == b[1][1] && b[0][0] == b[2][2] {
+		if b[0][0] != Empty {
+			return true
+		}
+	}
+	// 0,2; 1,1; 2,0
+	if b[0][2] == b[1][1] && b[0][0] == b[2][0] {
+		if b[0][2] != Empty {
+			return true
+		}
+	}
+
+	return false
 }
