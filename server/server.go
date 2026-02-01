@@ -44,9 +44,10 @@ func main() {
 		if curPlayer == 2 {
 			fmt.Printf("Player: %v joined\n", curPlayer)
 			go connPlayer2(conn, player2Turn, player1Turn, board, someOneWon)
+			break
 		}
 	}
-	// <-someOneWon
+	<-someOneWon
 }
 
 func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan struct{}, myBoard *board.Board, wonCh chan<- struct{}) {
@@ -79,7 +80,6 @@ func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan stru
 		fmt.Printf("request player 2: %s\n", requestMsg)
 
 		myBoard.Update(board.O, string(requestMsg))
-		// TODO: check for win
 		if myBoard.Won() {
 			sendWonMsg(&conn, wonCh)
 			ownTurn <- struct{}{}
@@ -119,7 +119,6 @@ func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan stru
 		fmt.Printf("request player 1: %s\n", requestMsg)
 
 		myBoard.Update(board.X, string(requestMsg))
-		// TODO: check for win
 		if myBoard.Won() {
 			sendWonMsg(&conn, wonCh)
 			ownTurn <- struct{}{}
