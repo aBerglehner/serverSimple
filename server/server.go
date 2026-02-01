@@ -26,6 +26,7 @@ func main() {
 
 	player2Turn := make(chan struct{})
 	player1Turn := make(chan struct{})
+	someOneWon := make(chan struct{})
 
 	board := board.NewBoard()
 	curPlayer := 0
@@ -38,20 +39,17 @@ func main() {
 		curPlayer++
 		if curPlayer == 1 {
 			fmt.Printf("Player: %v joined\n", curPlayer)
-			go connPlayer1(conn, player1Turn, player2Turn, board)
+			go connPlayer1(conn, player1Turn, player2Turn, board, someOneWon)
 		}
 		if curPlayer == 2 {
 			fmt.Printf("Player: %v joined\n", curPlayer)
-			go connPlayer2(conn, player2Turn, player1Turn, board)
-		}
-		if curPlayer > 2 {
-			// todo
-			fmt.Println("!!! todo !!!")
+			go connPlayer2(conn, player2Turn, player1Turn, board, someOneWon)
 		}
 	}
+	// <-someOneWon
 }
 
-func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan struct{}, myBoard *board.Board) {
+func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan struct{}, myBoard *board.Board, wonCh chan<- struct{}) {
 	defer conn.Close()
 	ownTurn <- struct{}{}
 
@@ -82,11 +80,16 @@ func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan stru
 
 		myBoard.Update(board.O, string(requestMsg))
 		// TODO: check for win
+		if myBoard.Won() {
+			sendWonMsg(&conn, wonCh)
+			ownTurn <- struct{}{}
+			break
+		}
 		ownTurn <- struct{}{}
 	}
 }
 
-func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan struct{}, myBoard *board.Board) {
+func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan struct{}, myBoard *board.Board, wonCh chan<- struct{}) {
 	defer conn.Close()
 
 	writeWelcomeMsg(conn, board.X)
@@ -117,6 +120,11 @@ func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan stru
 
 		myBoard.Update(board.X, string(requestMsg))
 		// TODO: check for win
+		if myBoard.Won() {
+			sendWonMsg(&conn, wonCh)
+			ownTurn <- struct{}{}
+			break
+		}
 		ownTurn <- struct{}{}
 	}
 }
@@ -128,4 +136,16 @@ func writeWelcomeMsg(conn net.Conn, cellType board.Cell) {
 		fmt.Println("failed to write welcome message:", err)
 		return
 	}
+}
+
+func sendWonMsg(conn *net.Conn, wonCh chan<- struct{}) {
+	fmt.Println("you won nice!!!")
+	m := "you won nice!!!"
+	m = fmt.Sprintf("%d\n%s", len(m), m)
+	_, err := (*conn).Write([]byte(m))
+	if err != nil {
+		fmt.Println("failed to write welcome message:", err)
+		return
+	}
+	wonCh <- struct{}{}
 }
