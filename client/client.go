@@ -30,14 +30,15 @@ func main() {
 	serverReader := bufio.NewReader(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 
+	readWelcomeMsg(serverReader)
+
 	for {
-		// get board
+		// get msg length
 		lenLine, err := serverReader.ReadString('\n')
 		if err != nil {
 			fmt.Println("failed to read from server:", err)
 			return
 		}
-		fmt.Print("lenLine: ", lenLine)
 
 		size, _ := strconv.Atoi(strings.TrimSpace(lenLine))
 		buf := make([]byte, size)
@@ -58,4 +59,13 @@ func main() {
 			return
 		}
 	}
+}
+
+func readWelcomeMsg(serverReader *bufio.Reader) {
+	welcomeMsg, err := serverReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("failed to read from server:", err)
+		return
+	}
+	fmt.Print("lenLine: ", welcomeMsg)
 }

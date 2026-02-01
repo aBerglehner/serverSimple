@@ -38,10 +38,10 @@ func (b *Board) Update(cellType Cell, move string) {
 	}
 
 	row, _ := strconv.Atoi(strings.TrimSpace(move[1:]))
-
 	b[row-1][col] = cellType
 }
 
+// TODO: add win func
 func (b Board) String() string {
 	var sb strings.Builder
 	sb.WriteString("  A   B   C\n")

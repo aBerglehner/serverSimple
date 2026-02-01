@@ -55,6 +55,8 @@ func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan stru
 	defer conn.Close()
 	ownTurn <- struct{}{}
 
+	writeWelcomeMsg(conn, board.O)
+
 	reader := bufio.NewReader(conn)
 	for {
 		// waiting for player 1
@@ -79,12 +81,15 @@ func connPlayer2(conn net.Conn, ownTurn chan<- struct{}, player1Turn <-chan stru
 		fmt.Printf("request player 2: %s\n", requestMsg)
 
 		myBoard.Update(board.O, string(requestMsg))
+		// TODO: check for win
 		ownTurn <- struct{}{}
 	}
 }
 
 func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan struct{}, myBoard *board.Board) {
 	defer conn.Close()
+
+	writeWelcomeMsg(conn, board.X)
 
 	reader := bufio.NewReader(conn)
 	// get board -> make move -> get board -> make move
@@ -111,6 +116,16 @@ func connPlayer1(conn net.Conn, ownTurn chan<- struct{}, player2Turn <-chan stru
 		fmt.Printf("request player 1: %s\n", requestMsg)
 
 		myBoard.Update(board.X, string(requestMsg))
+		// TODO: check for win
 		ownTurn <- struct{}{}
+	}
+}
+
+func writeWelcomeMsg(conn net.Conn, cellType board.Cell) {
+	msg := fmt.Sprintf("welcome player 2 your sign: %v\n", string(cellType))
+	_, err := conn.Write([]byte(msg))
+	if err != nil {
+		fmt.Println("failed to write welcome message:", err)
+		return
 	}
 }
